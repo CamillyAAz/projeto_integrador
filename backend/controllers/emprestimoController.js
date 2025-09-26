@@ -1,9 +1,25 @@
 const Emprestimo = require('../models/emprestimo');
+const { Aluno, Material } = require('../models');
+const WhatsAppNotificationService = require('../services/whatsappNotificationService');
+
+const whatsappService = new WhatsAppNotificationService();
 
 module.exports = {
   async create(req, res) {
     try {
       const emprestimo = await Emprestimo.create(req.body);
+      
+      const aluno = await Aluno.findByPk(emprestimo.id_aluno);
+      const material = await Material.findByPk(emprestimo.id_material);
+      
+      if (aluno && material) {
+        try {
+          await whatsappService.notifyNewLoan(aluno, material, emprestimo);
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação:', notifyError.message);
+        }
+      }
+      
       res.status(201).json(emprestimo);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -77,7 +93,20 @@ module.exports = {
     try {
       const emprestimo = await Emprestimo.findByPk(req.params.id);
       if (!emprestimo) return res.status(404).json({ error: 'Empréstimo não encontrado' });
+      
       await emprestimo.update({ aprovado_admin: 1 });
+      
+      const aluno = await Aluno.findByPk(emprestimo.id_aluno);
+      const material = await Material.findByPk(emprestimo.id_material);
+      
+      if (aluno && material) {
+        try {
+          await whatsappService.notifyLoanApproval(aluno, material, emprestimo);
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação:', notifyError.message);
+        }
+      }
+      
       res.json(emprestimo);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -88,10 +117,23 @@ module.exports = {
     try {
       const emprestimo = await Emprestimo.findByPk(req.params.id);
       if (!emprestimo) return res.status(404).json({ error: 'Empréstimo não encontrado' });
+      
       await emprestimo.update({ 
         status: 'devolvido',
         data_devolucao_real: new Date()
       });
+      
+      const aluno = await Aluno.findByPk(emprestimo.id_aluno);
+      const material = await Material.findByPk(emprestimo.id_material);
+      
+      if (aluno && material) {
+        try {
+          await whatsappService.notifyReturn(aluno, material, emprestimo);
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação:', notifyError.message);
+        }
+      }
+      
       res.json(emprestimo);
     } catch (err) {
       res.status(400).json({ error: err.message });

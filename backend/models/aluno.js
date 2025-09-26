@@ -29,6 +29,10 @@ const Aluno = sequelize.define('Aluno', {
     allowNull: false,
     unique: true,
   },
+  telefone: {
+    type: DataTypes.STRING(15),
+    allowNull: false,
+  },
   ativo: {
     type: DataTypes.TINYINT,
     allowNull: false,
