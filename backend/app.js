@@ -5,12 +5,14 @@ const alunoRoutes = require('./routes/alunoRoutes');
 const emprestimoRoutes = require('./routes/emprestimoRoutes');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const NotificationScheduler = require('./services/notificationScheduler');
+const materialRoutes = require("./routes/materialRoutes");
 
 app.use(express.json());
 app.use('/alunos', alunoRoutes);
 app.use('/emprestimos', emprestimoRoutes);
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/materiais", materialRoutes);
 
 const PORT = process.env.PORT || 3000;
 
