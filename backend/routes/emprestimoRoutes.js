@@ -42,201 +42,50 @@ const emprestimoController = require('../controllers/emprestimoController');
 
 /**
  * @swagger
- * /emprestimos:
- *   get:
- *     summary: Lista todos os empréstimos
- *     tags: [Empréstimo]
- *     responses:
- *       200:
- *         description: Lista de empréstimos
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Emprestimo'
+ * /emprestimos/qrcode/aprovar:
  *   post:
- *     summary: Cria um novo empréstimo
+ *     summary: Aprova um empréstimo via QR Code
  *     tags: [Empréstimo]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Emprestimo'
+ *             type: object
+ *             properties:
+ *               ra_aluno: { type: string }
+ *               cod_material: { type: string }
+ *               bloco: { type: string }
+ *               descricao: { type: string }
+ *               data_retirada: { type: string, format: date-time }
+ *               data_devolucao_prevista: { type: string, format: date-time }
+ *               periodo: { type: string, enum: [manhã, tarde, noite] }
+ *               valor_multa: { type: number }
  *     responses:
  *       201:
- *         description: Empréstimo criado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Emprestimo'
- *       400:
- *         description: Requisição inválida
+ *         description: Empréstimo aprovado
  */
+router.post('/qrcode/aprovar', emprestimoController.aprovarViaQr);
 
 /**
  * @swagger
- * /emprestimos/{id}:
- *   get:
- *     summary: Busca um empréstimo pelo ID
+ * /emprestimos/qrcode/devolver:
+ *   post:
+ *     summary: Registra devolução via QR Code
  *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do empréstimo
- *     responses:
- *       200:
- *         description: Empréstimo encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Emprestimo'
- *       404:
- *         description: Empréstimo não encontrado
- *   put:
- *     summary: Atualiza um empréstimo pelo ID
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do empréstimo
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Emprestimo'
+ *             type: object
+ *             properties:
+ *               id_emprestimo: { type: integer }
  *     responses:
  *       200:
- *         description: Empréstimo atualizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Emprestimo'
- *       400:
- *         description: Requisição inválida
- *       404:
- *         description: Empréstimo não encontrado
- *   delete:
- *     summary: Remove um empréstimo pelo ID
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do empréstimo
- *     responses:
- *       204:
- *         description: Empréstimo removido
- *       404:
- *         description: Empréstimo não encontrado
+ *         description: Devolução realizada
  */
-
-/**
- * @swagger
- * /emprestimos/aluno/{alunoId}:
- *   get:
- *     summary: Busca empréstimos de um aluno
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: alunoId
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do aluno
- *     responses:
- *       200:
- *         description: Lista de empréstimos do aluno
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Emprestimo'
- */
-
-/**
- * @swagger
- * /emprestimos/status/{status}:
- *   get:
- *     summary: Busca empréstimos por status
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: status
- *         schema:
- *           type: string
- *           enum: [ativo, devolvido, atrasado]
- *         required: true
- *         description: Status do empréstimo
- *     responses:
- *       200:
- *         description: Lista de empréstimos com o status especificado
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Emprestimo'
- */
-
-/**
- * @swagger
- * /emprestimos/{id}/aprovar:
- *   patch:
- *     summary: Aprova um empréstimo
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do empréstimo
- *     responses:
- *       200:
- *         description: Empréstimo aprovado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Emprestimo'
- *       404:
- *         description: Empréstimo não encontrado
- */
-
-/**
- * @swagger
- * /emprestimos/{id}/devolver:
- *   patch:
- *     summary: Registra a devolução de um empréstimo
- *     tags: [Empréstimo]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID do empréstimo
- *     responses:
- *       200:
- *         description: Devolução registrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Emprestimo'
- *       404:
- *         description: Empréstimo não encontrado
- */
+router.post('/qrcode/devolver', emprestimoController.devolverViaQr);
 
 router.post('/', emprestimoController.create);
 router.get('/', emprestimoController.findAll);
