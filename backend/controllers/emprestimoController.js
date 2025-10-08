@@ -89,6 +89,20 @@ module.exports = {
     }
   },
 
+  async findMine(req, res) {
+    try {
+      if (!req.user || req.user.role !== 'aluno') {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+      const emprestimos = await Emprestimo.findAll({ 
+        where: { id_aluno: req.user.id_aluno } 
+      });
+      res.json(emprestimos);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
   async aprovar(req, res) {
     try {
       const emprestimo = await Emprestimo.findByPk(req.params.id);

@@ -33,6 +33,10 @@ const Aluno = sequelize.define('Aluno', {
     type: DataTypes.STRING(15),
     allowNull: false,
   },
+  senha: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
   ativo: {
     type: DataTypes.TINYINT,
     allowNull: false,

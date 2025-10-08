@@ -6,6 +6,7 @@ const emprestimoRoutes = require('./routes/emprestimoRoutes');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const NotificationScheduler = require('./services/notificationScheduler');
 const materialRoutes = require("./routes/materialRoutes");
+const authRoutes = require('./routes/authRoutes');
 
 app.use(express.json());
 app.use('/alunos', alunoRoutes);
@@ -13,10 +14,11 @@ app.use('/emprestimos', emprestimoRoutes);
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/materiais", materialRoutes);
+app.use('/auth', authRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-sequelize.sync({ force: false }).then(() => {
+sequelize.sync({ alter: true, force: false }).then(() => {
   console.log('Banco de dados sincronizado');
   
   // Iniciar scheduler de notificações
