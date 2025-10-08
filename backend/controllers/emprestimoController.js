@@ -7,6 +7,13 @@ const whatsappService = new WhatsAppNotificationService();
 module.exports = {
   async create(req, res) {
     try {
+      const { id_aluno } = req.body;
+// Validação aluno antes do emprestimo
+      const validacao = await alunoEstaApto(id_aluno);
+      if (!validacao.apto) {
+        return res.status(400).json({ error: validacao.motivo });
+      }
+
       const emprestimo = await Emprestimo.create(req.body);
       
       const aluno = await Aluno.findByPk(emprestimo.id_aluno);
