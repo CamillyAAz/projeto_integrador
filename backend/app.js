@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const { sequelize } = require('./models');
 const alunoRoutes = require('./routes/alunoRoutes');
@@ -6,6 +7,14 @@ const emprestimoRoutes = require('./routes/emprestimoRoutes');
 const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const NotificationScheduler = require('./services/notificationScheduler');
 const materialRoutes = require("./routes/materialRoutes");
+const qrcodeRoutes = require('./routes/qrcodeRoutes');
+
+// Configuração do CORS para permitir requisições de aplicativos mobile
+app.use(cors({
+  origin: '*', // Em produção, especifique as origens permitidas
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 app.use('/alunos', alunoRoutes);
@@ -13,6 +22,7 @@ app.use('/emprestimos', emprestimoRoutes);
 app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/materiais", materialRoutes);
+app.use('/qrcode', qrcodeRoutes);
 
 const PORT = process.env.PORT || 3000;
 

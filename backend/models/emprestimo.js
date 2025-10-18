@@ -47,6 +47,16 @@ const Emprestimo = sequelize.define('Emprestimo', {
     type: DataTypes.ENUM('manhã', 'tarde', 'noite'),
     allowNull: false,
   },
+  valor_multa: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 0.00,
+  },
+  multa_paga: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
   local_retirada: {
     type: DataTypes.STRING(100),
     allowNull: false,
