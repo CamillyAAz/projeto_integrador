@@ -4,6 +4,37 @@ const emprestimoController = require('../controllers/emprestimoController');
 
 /**
  * @swagger
+ * /emprestimos/multas/pendentes:
+ *   get:
+ *     summary: Busca multas pendentes de pagamento
+ *     tags: [Empréstimo]
+ *     responses:
+ *       200:
+ *         description: Lista de multas pendentes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id_multa:
+ *                     type: integer
+ *                   id_emprestimo:
+ *                     type: integer
+ *                   valor:
+ *                     type: number
+ *                     format: float
+ *                   data_geracao:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
+ *                     enum: [pendente, pago]
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
  *     Emprestimo:
@@ -96,5 +127,8 @@ router.get('/aluno/:alunoId', emprestimoController.findByAluno);
 router.get('/status/:status', emprestimoController.findByStatus);
 router.patch('/:id/aprovar', emprestimoController.aprovar);
 router.patch('/:id/devolver', emprestimoController.devolver);
+
+// Rota para consultar multas pendentes por aluno
+router.get('/multas/aluno/:alunoId', emprestimoController.consultarMultasPendentes);
 
 module.exports = router;

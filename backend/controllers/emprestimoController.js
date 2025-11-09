@@ -1,19 +1,82 @@
 const Emprestimo = require('../models/emprestimo');
 const { Aluno, Material } = require('../models');
 const WhatsAppNotificationService = require('../services/whatsappNotificationService');
+const { Op } = require('sequelize');
 
 const whatsappService = new WhatsAppNotificationService();
 
+// Função para calcular multa (R$10,00 por dia de atraso)
+const calcularMulta = (dataPrevista, dataReal) => {
+  const prevista = new Date(dataPrevista);
+  const real = new Date(dataReal);
+  
+  // Se devolveu antes ou no prazo, não há multa
+  if (real <= prevista) return 0;
+  
+  // Calcula a diferença em dias
+  const diffTime = Math.abs(real - prevista);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Retorna o valor da multa (R$10 por dia)
+  return diffDays * 10.0;
+};
+
+// Função para verificar se aluno possui multas pendentes
+const verificarMultasPendentes = async (alunoId) => {
+  const multasPendentes = await Emprestimo.findOne({
+    where: {
+      id_aluno: alunoId,
+      valor_multa: {
+        [Op.gt]: 0
+      },
+      multa_paga: false
+    }
+  });
+  
+  return !!multasPendentes; // Retorna true se existir alguma multa pendente
+};
+
 module.exports = {
+  // Endpoint para consultar multas pendentes por aluno
+  async consultarMultasPendentes(req, res) {
+    try {
+      const { alunoId } = req.params;
+      
+      const multasPendentes = await Emprestimo.findAll({
+        where: {
+          id_aluno: alunoId,
+          valor_multa: {
+            [Op.gt]: 0
+          },
+          multa_paga: false
+        }
+      });
+      
+      // Calcula o total de multas pendentes
+      const totalMultas = multasPendentes.reduce((total, emp) => total + parseFloat(emp.valor_multa), 0);
+      
+      res.json({
+        multas: multasPendentes,
+        total: totalMultas,
+        quantidade: multasPendentes.length
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+  
   async create(req, res) {
     try {
-      const { id_aluno } = req.body;
-// Validação aluno antes do emprestimo
-      const validacao = await alunoEstaApto(id_aluno);
-      if (!validacao.apto) {
-        return res.status(400).json({ error: validacao.motivo });
+      // Verificar se o aluno possui multas pendentes
+      const possuiMultasPendentes = await verificarMultasPendentes(req.body.id_aluno);
+      
+      if (possuiMultasPendentes) {
+        return res.status(403).json({ 
+          error: 'Não é possível realizar empréstimos para alunos com multas pendentes',
+          message: 'Por favor, regularize suas multas pendentes antes de solicitar um novo empréstimo'
+        });
       }
-
+      
       const emprestimo = await Emprestimo.create(req.body);
       
       const aluno = await Aluno.findByPk(emprestimo.id_aluno);
@@ -55,6 +118,13 @@ module.exports = {
   async update(req, res) {
     try {
       const emprestimo = await Emprestimo.findByPk(req.params.id);
+      
+      // Se estiver atualizando para registrar devolução
+      if (req.body.data_devolucao_real && !emprestimo.data_devolucao_real) {
+        // Calcula multa se houver atraso
+        const valorMulta = calcularMulta(emprestimo.data_devolucao_prevista, req.body.data_devolucao_real);
+        req.body.valor_multa = valorMulta;
+      }
       if (!emprestimo) return res.status(404).json({ error: 'Empréstimo não encontrado' });
       await emprestimo.update(req.body);
       res.json(emprestimo);
