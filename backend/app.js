@@ -26,7 +26,7 @@ app.use('/qrcode', qrcodeRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-sequelize.sync({ force: false }).then(() => {
+sequelize.sync({ alter: true, force: false }).then(() => {
   console.log('Banco de dados sincronizado');
   
   // Iniciar scheduler de notificações

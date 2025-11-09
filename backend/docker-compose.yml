@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build: .
@@ -10,6 +8,8 @@ services:
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=projeto_integrador
+      - JWT_SECRET=segredos
+      - TOKEN_EXPIRATION=1h
     depends_on:
       - mysql
     volumes:
