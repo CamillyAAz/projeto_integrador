@@ -8,10 +8,13 @@ const { swaggerUi, swaggerSpec } = require('./config/swagger');
 const NotificationScheduler = require('./services/notificationScheduler');
 const materialRoutes = require("./routes/materialRoutes");
 const qrcodeRoutes = require('./routes/qrcodeRoutes');
+const relatorioRoutes = require('./routes/relatorioRoutes');
+const multaRoutes = require('./routes/multaRoutes');
+const suspensaoRoutes = require('./routes/suspensaoRoutes');
+const danoRoutes = require('./routes/danoRoutes');
 
-// Configuração do CORS para permitir requisições de aplicativos mobile
 app.use(cors({
-  origin: '*', // Em produção, especifique as origens permitidas
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -23,13 +26,16 @@ app.use('/notifications', require('./routes/notificationRoutes'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/materiais", materialRoutes);
 app.use('/qrcode', qrcodeRoutes);
+app.use('/api/relatorios', relatorioRoutes);
+app.use('/api/multas', multaRoutes);
+app.use('/api/suspensoes', suspensaoRoutes);
+app.use('/api/danos', danoRoutes);
 
 const PORT = process.env.PORT || 3000;
 
 sequelize.sync({ alter: true, force: false }).then(() => {
   console.log('Banco de dados sincronizado');
   
-  // Iniciar scheduler de notificações
   const notificationScheduler = new NotificationScheduler();
   notificationScheduler.start();
   
