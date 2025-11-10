@@ -131,6 +131,83 @@ class WhatsAppNotificationService {
     
     return cleanPhone;
   }
+
+  async notifyFine(aluno, material, valorMulta, emprestimo) {
+    const message = `💰 *MULTA APLICADA*\n\n` +
+      `Olá ${aluno.nome}!\n\n` +
+      `Uma multa foi aplicada ao seu empréstimo:\n` +
+      `📚 Material: ${material.nome}\n` +
+      `💵 Valor da multa: R$ ${valorMulta.toFixed(2)}\n` +
+      `📅 Data prevista: ${new Date(emprestimo.data_devolucao_prevista).toLocaleDateString('pt-BR')}\n\n` +
+      `⚠️ Por favor, regularize seu pagamento na secretaria.`;
+
+    return await this.sendMessage(
+      this.formatPhoneNumber(aluno.telefone || '5545999999999'),
+      message,
+      'Multa Aplicada'
+    );
+  }
+
+  async notifySuspension(aluno, valorPendente, motivo = 'multas_pendentes', descricao = '') {
+    const motivoTexto = {
+      'multas_pendentes': 'acúmulo de multas pendentes',
+      'danos_nao_pagos': 'danos não pagos',
+      'atraso_recorrente': 'atrasos recorrentes',
+      'outros': 'outras razões'
+    };
+
+    const message = `🚫 *SUSPENSÃO DE CONTA*\n\n` +
+      `Olá ${aluno.nome}!\n\n` +
+      `Sua conta foi suspensa por: ${motivoTexto[motivo] || motivo}\n` +
+      `💵 Valor pendente: R$ ${parseFloat(valorPendente).toFixed(2)}\n` +
+      `${descricao ? `\nMotivo: ${descricao}\n` : ''}` +
+      `\n⚠️ Você não poderá realizar novos empréstimos até regularizar sua situação.\n\n` +
+      `Procure a secretaria para mais informações.`;
+
+    return await this.sendMessage(
+      this.formatPhoneNumber(aluno.telefone || '5545999999999'),
+      message,
+      'Conta Suspensa'
+    );
+  }
+
+  async notifySuspensionLifted(aluno) {
+    const message = `✅ *SUSPENSÃO REMOVIDA*\n\n` +
+      `Olá ${aluno.nome}!\n\n` +
+      `Sua suspensão foi removida!\n\n` +
+      `Você já pode realizar novos empréstimos.\n\n` +
+      `Obrigado por regularizar sua situação! 🎉`;
+
+    return await this.sendMessage(
+      this.formatPhoneNumber(aluno.telefone || '5545999999999'),
+      message,
+      'Suspensão Removida'
+    );
+  }
+
+  async notifyDamage(aluno, material, dano) {
+    const gravidadeTexto = {
+      'leve': 'Leve',
+      'moderado': 'Moderado',
+      'grave': 'Grave',
+      'perda_total': 'Perda Total'
+    };
+
+    const message = `⚠️ *REGISTRO DE DANO*\n\n` +
+      `Olá ${aluno.nome}!\n\n` +
+      `Foi registrado um dano no material emprestado:\n` +
+      `📚 Material: ${material.nome}\n` +
+      `🔧 Gravidade: ${gravidadeTexto[dano.gravidade]}\n` +
+      `📝 Descrição: ${dano.descricao_dano}\n` +
+      `💵 Valor do reparo: R$ ${parseFloat(dano.valor_reparo).toFixed(2)}\n\n` +
+      `Por favor, procure a secretaria para regularizar a situação.`;
+
+    return await this.sendMessage(
+      this.formatPhoneNumber(aluno.telefone || '5545999999999'),
+      message,
+      'Dano Registrado'
+    );
+  }
 }
 
 module.exports = WhatsAppNotificationService;

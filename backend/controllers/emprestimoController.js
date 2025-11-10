@@ -5,23 +5,18 @@ const { Op } = require('sequelize');
 
 const whatsappService = new WhatsAppNotificationService();
 
-// Função para calcular multa (R$10,00 por dia de atraso)
 const calcularMulta = (dataPrevista, dataReal) => {
   const prevista = new Date(dataPrevista);
   const real = new Date(dataReal);
   
-  // Se devolveu antes ou no prazo, não há multa
   if (real <= prevista) return 0;
   
-  // Calcula a diferença em dias
   const diffTime = Math.abs(real - prevista);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  // Retorna o valor da multa (R$10 por dia)
   return diffDays * 10.0;
 };
 
-// Função para verificar se aluno possui multas pendentes
 const verificarMultasPendentes = async (alunoId) => {
   const multasPendentes = await Emprestimo.findOne({
     where: {
@@ -33,11 +28,10 @@ const verificarMultasPendentes = async (alunoId) => {
     }
   });
   
-  return !!multasPendentes; // Retorna true se existir alguma multa pendente
+  return !!multasPendentes;
 };
 
 module.exports = {
-  // Endpoint para consultar multas pendentes por aluno
   async consultarMultasPendentes(req, res) {
     try {
       const { alunoId } = req.params;
@@ -52,7 +46,6 @@ module.exports = {
         }
       });
       
-      // Calcula o total de multas pendentes
       const totalMultas = multasPendentes.reduce((total, emp) => total + parseFloat(emp.valor_multa), 0);
       
       res.json({
@@ -67,7 +60,6 @@ module.exports = {
   
   async create(req, res) {
     try {
-      // Verificar se o aluno possui multas pendentes
       const possuiMultasPendentes = await verificarMultasPendentes(req.body.id_aluno);
       
       if (possuiMultasPendentes) {
@@ -119,9 +111,7 @@ module.exports = {
     try {
       const emprestimo = await Emprestimo.findByPk(req.params.id);
       
-      // Se estiver atualizando para registrar devolução
       if (req.body.data_devolucao_real && !emprestimo.data_devolucao_real) {
-        // Calcula multa se houver atraso
         const valorMulta = calcularMulta(emprestimo.data_devolucao_prevista, req.body.data_devolucao_real);
         req.body.valor_multa = valorMulta;
       }
@@ -209,9 +199,25 @@ module.exports = {
       const emprestimo = await Emprestimo.findByPk(req.params.id);
       if (!emprestimo) return res.status(404).json({ error: 'Empréstimo não encontrado' });
       
+      const { local_devolucao } = req.body;
+      
+      if (local_devolucao && local_devolucao !== emprestimo.local_retirada) {
+        return res.status(400).json({ 
+          error: 'Local de devolução inválido',
+          message: `O material deve ser devolvido no mesmo local onde foi retirado: ${emprestimo.local_retirada}`,
+          local_esperado: emprestimo.local_retirada,
+          local_informado: local_devolucao
+        });
+      }
+      
+      const dataAtual = new Date();
+      const valorMulta = calcularMulta(emprestimo.data_devolucao_prevista, dataAtual);
+      
       await emprestimo.update({ 
         status: 'devolvido',
-        data_devolucao_real: new Date()
+        data_devolucao_real: dataAtual,
+        local_devolucao: emprestimo.local_retirada,
+        valor_multa: valorMulta
       });
       
       const aluno = await Aluno.findByPk(emprestimo.id_aluno);
@@ -231,7 +237,6 @@ module.exports = {
     }
   },
 
-  // === NOVAS FUNÇÕES VIA QR CODE ===
   async aprovarViaQr(req, res) {
     try {
       const {
@@ -244,16 +249,13 @@ module.exports = {
         periodo
       } = req.body;
 
-      // Validar aluno
       const aluno = await Aluno.findOne({ where: { ra: ra_aluno } });
       if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
 
-      // Validar material
       const material = await Material.findOne({ where: { codigo: cod_material } });
       if (!material) return res.status(404).json({ error: 'Material não encontrado' });
       if (!material.disponivel) return res.status(400).json({ error: 'Material indisponível' });
 
-      // Criar empréstimo
       const emprestimo = await Emprestimo.create({
         id_aluno: aluno.id_aluno,
         id_material: material.id_material,
@@ -266,7 +268,6 @@ module.exports = {
         aprovado_admin: 1
       });
 
-      // Atualizar disponibilidade do material
       await material.update({ disponivel: 0 });
 
       res.status(201).json({ message: 'Empréstimo aprovado via QR Code', emprestimo });
@@ -277,14 +278,28 @@ module.exports = {
 
   async devolverViaQr(req, res) {
     try {
-      const { id_emprestimo } = req.body;
+      const { id_emprestimo, bloco } = req.body;
 
       const emprestimo = await Emprestimo.findByPk(id_emprestimo);
       if (!emprestimo) return res.status(404).json({ error: 'Empréstimo não encontrado' });
 
+      if (bloco && bloco !== emprestimo.local_retirada) {
+        return res.status(400).json({ 
+          error: 'Local de devolução inválido',
+          message: `O material deve ser devolvido no mesmo local onde foi retirado: ${emprestimo.local_retirada}`,
+          local_esperado: emprestimo.local_retirada,
+          local_informado: bloco
+        });
+      }
+
+      const dataAtual = new Date();
+      const valorMulta = calcularMulta(emprestimo.data_devolucao_prevista, dataAtual);
+
       await emprestimo.update({
         status: 'devolvido',
-        data_devolucao_real: new Date()
+        data_devolucao_real: dataAtual,
+        local_devolucao: emprestimo.local_retirada, // Garante que o local de devolução seja o mesmo da retirada
+        valor_multa: valorMulta
       });
 
       const material = await Material.findByPk(emprestimo.id_material);
