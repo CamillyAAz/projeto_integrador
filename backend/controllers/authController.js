@@ -7,16 +7,22 @@ module.exports = {
   async login(req, res) {
     try {
       const { login, senha } = req.body;
+      console.log('auth: login attempt', { login, senha: senha ? '***' : 'vazia' });
+      
       if (!login || !senha) {
         return res.status(400).json({ error: 'login e senha são obrigatórios' });
       }
 
       const admin = await Administrador.findOne({ where: { login } });
+      console.log('auth: admin found', { found: !!admin, login });
+      
       if (!admin) {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
       const ok = await bcrypt.compare(senha, admin.senha);
+      console.log('auth: password compare', { ok });
+      
       if (!ok) {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
@@ -46,11 +52,13 @@ module.exports = {
       }
 
       const aluno = await Aluno.findOne({ where: { ra } });
+      console.log('auth: alunoLogin attempt', { ra, found: !!aluno });
       if (!aluno || !aluno.senha) {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
       const ok = await bcrypt.compare(senha, aluno.senha);
+      console.log('auth: alunoLogin compare', { ok });
       if (!ok) {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
@@ -134,6 +142,17 @@ module.exports = {
       return res.json({ user: req.user });
     } catch (err) {
       return res.status(500).json({ error: err.message });
+    }
+  },
+
+  async verificarAdmin(req, res) {
+    try {
+      const { login } = req.params;
+      const admin = await Administrador.findOne({ where: { login } });
+      if (!admin) return res.status(404).json({ exists: false, message: 'Administrador não encontrado' });
+      res.json({ exists: true, id: admin.id_admin, nome: admin.nome, login: admin.login });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   },
 };

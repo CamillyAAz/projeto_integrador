@@ -82,4 +82,14 @@ module.exports = {
       res.status(500).json({ error: err.message });
     }
   },
+
+  async verificar(req, res) {
+    try {
+      const aluno = await Aluno.findOne({ where: { ra: req.params.ra } });
+      if (!aluno) return res.status(404).json({ exists: false, message: 'Aluno não encontrado' });
+      res.json({ exists: true, id: aluno.id_aluno, nome: aluno.nome, ra: aluno.ra });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };

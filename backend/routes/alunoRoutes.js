@@ -196,6 +196,7 @@ const alunoController = require('../controllers/alunoController');
 
 router.post('/', alunoController.create);
 router.get('/', alunoController.findAll);
+router.get('/verificar/:ra', alunoController.verificar);
 router.get('/ra/:ra', alunoController.findByRa);
 router.put('/ra/:ra', alunoController.updateByRa);
 router.delete('/ra/:ra', alunoController.deleteByRa);
