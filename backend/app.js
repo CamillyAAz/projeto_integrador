@@ -12,6 +12,7 @@ const relatorioRoutes = require('./routes/relatorioRoutes');
 const multaRoutes = require('./routes/multaRoutes');
 const suspensaoRoutes = require('./routes/suspensaoRoutes');
 const danoRoutes = require('./routes/danoRoutes');
+const laboratorioRoutes = require('./routes/laboratorioRoutes');
 
 app.use(cors({
   origin: '*',
@@ -30,6 +31,7 @@ app.use('/api/relatorios', relatorioRoutes);
 app.use('/api/multas', multaRoutes);
 app.use('/api/suspensoes', suspensaoRoutes);
 app.use('/api/danos', danoRoutes);
+app.use('/api/laboratorios', laboratorioRoutes);
 
 const PORT = process.env.PORT || 3000;
 
