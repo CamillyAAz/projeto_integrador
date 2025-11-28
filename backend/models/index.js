@@ -6,6 +6,7 @@ const Administrador = require('./administrador');
 const Emprestimo = require('./emprestimo');
 const Dano = require('./dano');
 const Suspensao = require('./suspensao');
+const Laboratorio = require('./laboratorio');
 
 Emprestimo.belongsTo(Aluno, { foreignKey: 'id_aluno' });
 Emprestimo.belongsTo(Material, { foreignKey: 'id_material' });
@@ -37,4 +38,5 @@ module.exports = {
   Emprestimo,
   Dano,
   Suspensao,
+  Laboratorio,
 };
